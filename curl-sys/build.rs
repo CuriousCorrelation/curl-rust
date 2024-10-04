@@ -1,3 +1,10 @@
+/// This is a fork of rust-curl that forces openssl-only setup.
+///
+/// Platform-specific functions that have been removed:
+/// - try_vcpkg()
+/// - try_pkg_config()
+/// - curl_config_reports_http2()
+/// - macos_link_search_path()
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -5,45 +12,56 @@ use std::process::Command;
 
 fn main() {
     println!("cargo:rerun-if-changed=curl");
-    println!(
-        "cargo:rustc-check-cfg=cfg(\
-            libcurl_vendored,\
-            link_libnghttp2,\
-            link_libz,\
-            link_openssl,\
-        )"
-    );
+    /* NOTE: Disable for only-openssl setup.
+     *
+     * println!(
+     *     "cargo:rustc-check-cfg=cfg(\
+     *         libcurl_vendored,\
+     *         link_libnghttp2,\
+     *         link_libz,\
+     *         link_openssl,\
+     *     )"
+     * );
+     */
+    println!("cargo:rustc-check-cfg=cfg(libcurl_vendored)");
+    println!("cargo:rustc-cfg=link_libz");
+    println!("cargo:rustc-cfg=link_openssl");
     let target = env::var("TARGET").unwrap();
     let windows = target.contains("windows");
 
-    if cfg!(feature = "mesalink") {
-        println!("cargo:warning=MesaLink support has been removed as of curl 7.82.0, will use default TLS backend instead.");
-    }
+    /* NOTE: Disable for only-openssl setup.
+    * if cfg!(feature = "mesalink") {
+    *     println!("cargo:warning=MesaLink support has been removed as of curl 7.82.0, will use default TLS backend instead.");
+    * }
 
-    // This feature trumps all others, and is largely set by rustbuild to force
-    // usage of the system library to ensure that we're always building an
-    // ABI-compatible Cargo.
-    if cfg!(feature = "force-system-lib-on-osx") && target.contains("apple") {
-        return println!("cargo:rustc-flags=-l curl");
-    }
+    * // This feature trumps all others, and is largely set by rustbuild to force
+    * // usage of the system library to ensure that we're always building an
+    * // ABI-compatible Cargo.
+    * if cfg!(feature = "force-system-lib-on-osx") && target.contains("apple") {
+    *     return println!("cargo:rustc-flags=-l curl");
+    * }
+    */
 
-    // If the static-curl feature is disabled, probe for a system-wide libcurl.
-    if !cfg!(feature = "static-curl") {
-        // OSX ships libcurl by default, so we just use that version
-        // so long as it has the right features enabled.
-        if target.contains("apple") && (!cfg!(feature = "http2") || curl_config_reports_http2()) {
-            return println!("cargo:rustc-flags=-l curl");
-        }
-
-        // Next, fall back and try to use pkg-config if its available.
-        if windows {
-            if try_vcpkg() {
-                return;
-            }
-        } else if try_pkg_config() {
-            return;
-        }
-    }
+    /* NOTE|TEMP: Disable for testing. Might have to re-enable later.
+     *
+     * // If the static-curl feature is disabled, probe for a system-wide libcurl.
+     * if !cfg!(feature = "static-curl") {
+     *     // OSX ships libcurl by default, so we just use that version
+     *     // so long as it has the right features enabled.
+     *     if target.contains("apple") && (!cfg!(feature = "http2") || curl_config_reports_http2()) {
+     *         return println!("cargo:rustc-flags=-l curl");
+     *     }
+     *
+     *     // Next, fall back and try to use pkg-config if its available.
+     *     if windows {
+     *         if try_vcpkg() {
+     *             return;
+     *         }
+     *     } else if try_pkg_config() {
+     *         return;
+     *     }
+     * }
+     */
 
     if !Path::new("curl/.git").exists() {
         let _ = Command::new("git")
@@ -51,16 +69,19 @@ fn main() {
             .status();
     }
 
-    if target.contains("apple") {
-        // On (older) OSX we need to link against the clang runtime,
-        // which is hidden in some non-default path.
-        //
-        // More details at https://github.com/alexcrichton/curl-rust/issues/279.
-        if let Some(path) = macos_link_search_path() {
-            println!("cargo:rustc-link-lib=clang_rt.osx");
-            println!("cargo:rustc-link-search={}", path);
-        }
-    }
+    /* NOTE|TEMP: Disable for testing. Might have to re-enable later.
+     *
+     * if target.contains("apple") {
+     *     // On (older) OSX we need to link against the clang runtime,
+     *     // which is hidden in some non-default path.
+     *     //
+     *     // More details at https://github.com/alexcrichton/curl-rust/issues/279.
+     *     if let Some(path) = macos_link_search_path() {
+     *         println!("cargo:rustc-link-lib=clang_rt.osx");
+     *         println!("cargo:rustc-link-search={}", path);
+     *     }
+     * }
+     */
 
     let dst = PathBuf::from(env::var_os("OUT_DIR").unwrap());
     let include = dst.join("include");
@@ -263,92 +284,106 @@ fn main() {
         cfg.define("CURL_DISABLE_FTP", None);
     }
 
-    if cfg!(feature = "http2") {
-        cfg.define("USE_NGHTTP2", None)
-            .define("NGHTTP2_STATICLIB", None)
-            .file("curl/lib/cf-h2-proxy.c")
-            .file("curl/lib/http2.c");
+    /* NOTE: Disable for only-openssl setup.
+    *
+    * if cfg!(feature = "http2") {
+    *     cfg.define("USE_NGHTTP2", None)
+    *         .define("NGHTTP2_STATICLIB", None)
+    *         .file("curl/lib/cf-h2-proxy.c")
+    *         .file("curl/lib/http2.c");
 
-        println!("cargo:rustc-cfg=link_libnghttp2");
-        if let Some(path) = env::var_os("DEP_NGHTTP2_ROOT") {
-            let path = PathBuf::from(path);
-            cfg.include(path.join("include"));
-        }
-    }
+    *     println!("cargo:rustc-cfg=link_libnghttp2");
+    *     if let Some(path) = env::var_os("DEP_NGHTTP2_ROOT") {
+    *         let path = PathBuf::from(path);
+    *         cfg.include(path.join("include"));
+    *     }
+    * }
+    */
 
     println!("cargo:rustc-cfg=link_libz");
     if let Some(path) = env::var_os("DEP_Z_INCLUDE") {
         cfg.include(path);
     }
 
-    if cfg!(feature = "spnego") {
-        cfg.define("USE_SPNEGO", None)
-            .file("curl/lib/http_negotiate.c")
-            .file("curl/lib/vauth/vauth.c");
-    }
+    /* NOTE: Disable for only-openssl setup.
+     *
+     * if cfg!(feature = "spnego") {
+     *     cfg.define("USE_SPNEGO", None)
+     *         .file("curl/lib/http_negotiate.c")
+     *         .file("curl/lib/vauth/vauth.c");
+     * }
 
-    // Configure TLS backend. Since Cargo does not support mutually exclusive
-    // features, make sure we only compile one vtls.
-    if cfg!(feature = "rustls") {
-        cfg.define("USE_RUSTLS", None)
-            .file("curl/lib/vtls/cipher_suite.c")
-            .file("curl/lib/vtls/rustls.c")
-            .include(env::var_os("DEP_RUSTLS_FFI_INCLUDE").unwrap());
-    } else if cfg!(feature = "windows-static-ssl") {
-        if windows {
-            cfg.define("USE_OPENSSL", None)
-                .file("curl/lib/vtls/openssl.c");
-            // We need both openssl and zlib
-            // Those can be installed with
-            // ```shell
-            // git clone https://github.com/microsoft/vcpkg
-            // cd vcpkg
-            // ./bootstrap-vcpkg.bat -disableMetrics
-            // ./vcpkg.exe integrate install
-            // ./vcpkg.exe install openssl:x64-windows-static-md
-            // ```
-            #[cfg(target_env = "msvc")]
-            vcpkg::Config::new().find_package("openssl").ok();
-            #[cfg(target_env = "msvc")]
-            vcpkg::Config::new().find_package("zlib").ok();
-        } else {
-            panic!("Not available on non windows platform")
-        }
-    } else if cfg!(feature = "ssl") {
-        if windows {
-            // For windows, spnego feature is auto on in case ssl feature is on.
-            // Please see definition of USE_SPNEGO in curl_setup.h for more info.
-            cfg.define("USE_WINDOWS_SSPI", None)
-                .define("USE_SCHANNEL", None)
-                .file("curl/lib/http_negotiate.c")
-                .file("curl/lib/curl_sspi.c")
-                .file("curl/lib/socks_sspi.c")
-                .file("curl/lib/vauth/spnego_sspi.c")
-                .file("curl/lib/vauth/vauth.c")
-                .file("curl/lib/vtls/schannel.c")
-                .file("curl/lib/vtls/schannel_verify.c")
-                .file("curl/lib/vtls/x509asn1.c");
-        } else if target.contains("-apple-") {
-            cfg.define("USE_SECTRANSP", None)
-                .file("curl/lib/vtls/cipher_suite.c")
-                .file("curl/lib/vtls/sectransp.c")
-                .file("curl/lib/vtls/x509asn1.c");
-            if xcode_major_version().map_or(true, |v| v >= 9) {
-                // On earlier Xcode versions (<9), defining HAVE_BUILTIN_AVAILABLE
-                // would cause __bultin_available() to fail to compile due to
-                // unrecognized platform names, so we try to check for Xcode
-                // version first (if unknown, assume it's recent, as in >= 9).
-                cfg.define("HAVE_BUILTIN_AVAILABLE", "1");
-            }
-        } else {
-            cfg.define("USE_OPENSSL", None)
-                .file("curl/lib/vtls/openssl.c");
+     * // Configure TLS backend. Since Cargo does not support mutually exclusive
+     * // features, make sure we only compile one vtls.
+     * if cfg!(feature = "rustls") {
+     *     cfg.define("USE_RUSTLS", None)
+     *         .file("curl/lib/vtls/cipher_suite.c")
+     *         .file("curl/lib/vtls/rustls.c")
+     *         .include(env::var_os("DEP_RUSTLS_FFI_INCLUDE").unwrap());
+     * } else if cfg!(feature = "windows-static-ssl") {
+     *     if windows {
+     *         cfg.define("USE_OPENSSL", None)
+     *             .file("curl/lib/vtls/openssl.c");
+     *         // We need both openssl and zlib
+     *         // Those can be installed with
+     *         // ```shell
+     *         // git clone https://github.com/microsoft/vcpkg
+     *         // cd vcpkg
+     *         // ./bootstrap-vcpkg.bat -disableMetrics
+     *         // ./vcpkg.exe integrate install
+     *         // ./vcpkg.exe install openssl:x64-windows-static-md
+     *         // ```
+     *         #[cfg(target_env = "msvc")]
+     *         vcpkg::Config::new().find_package("openssl").ok();
+     *         #[cfg(target_env = "msvc")]
+     *         vcpkg::Config::new().find_package("zlib").ok();
+     *     } else {
+     *         panic!("Not available on non windows platform")
+     *     }
+     * } else if cfg!(feature = "ssl") {
+     *     if windows {
+     *         // For windows, spnego feature is auto on in case ssl feature is on.
+     *         // Please see definition of USE_SPNEGO in curl_setup.h for more info.
+     *         cfg.define("USE_WINDOWS_SSPI", None)
+     *             .define("USE_SCHANNEL", None)
+     *             .file("curl/lib/http_negotiate.c")
+     *             .file("curl/lib/curl_sspi.c")
+     *             .file("curl/lib/socks_sspi.c")
+     *             .file("curl/lib/vauth/spnego_sspi.c")
+     *             .file("curl/lib/vauth/vauth.c")
+     *             .file("curl/lib/vtls/schannel.c")
+     *             .file("curl/lib/vtls/schannel_verify.c")
+     *             .file("curl/lib/vtls/x509asn1.c");
+     *     } else if target.contains("-apple-") {
+     *         cfg.define("USE_SECTRANSP", None)
+     *             .file("curl/lib/vtls/cipher_suite.c")
+     *             .file("curl/lib/vtls/sectransp.c")
+     *             .file("curl/lib/vtls/x509asn1.c");
+     *         if xcode_major_version().map_or(true, |v| v >= 9) {
+     *             // On earlier Xcode versions (<9), defining HAVE_BUILTIN_AVAILABLE
+     *             // would cause __bultin_available() to fail to compile due to
+     *             // unrecognized platform names, so we try to check for Xcode
+     *             // version first (if unknown, assume it's recent, as in >= 9).
+     *             cfg.define("HAVE_BUILTIN_AVAILABLE", "1");
+     *         }
+     *     } else {
+     *         cfg.define("USE_OPENSSL", None)
+     *             .file("curl/lib/vtls/openssl.c");
 
-            println!("cargo:rustc-cfg=link_openssl");
-            if let Some(path) = env::var_os("DEP_OPENSSL_INCLUDE") {
-                cfg.include(path);
-            }
-        }
+     *         println!("cargo:rustc-cfg=link_openssl");
+     *         if let Some(path) = env::var_os("DEP_OPENSSL_INCLUDE") {
+     *             cfg.include(path);
+     *         }
+     *     }
+     * }
+    */
+
+    // NOTE: Always use OpenSSL.
+    cfg.define("USE_OPENSSL", None)
+        .file("curl/lib/vtls/openssl.c");
+    println!("cargo:rustc-cfg=link_openssl");
+    if let Some(path) = env::var_os("DEP_OPENSSL_INCLUDE") {
+        cfg.include(path);
     }
 
     // Configure platform-specific details.
@@ -455,169 +490,12 @@ fn main() {
         println!("cargo:rustc-link-lib=nsl");
     }
 
-    if target.contains("-apple-") {
-        println!("cargo:rustc-link-lib=framework=Security");
-        println!("cargo:rustc-link-lib=framework=CoreFoundation");
-        println!("cargo:rustc-link-lib=framework=CoreServices");
-        println!("cargo:rustc-link-lib=framework=SystemConfiguration");
-    }
-}
-
-#[cfg(not(target_env = "msvc"))]
-fn try_vcpkg() -> bool {
-    false
-}
-
-#[cfg(target_env = "msvc")]
-fn try_vcpkg() -> bool {
-    // the import library for the dll is called libcurl_imp
-    let mut successful_probe_details = match vcpkg::Config::new()
-        .lib_names("libcurl_imp", "libcurl")
-        .emit_includes(true)
-        .probe("curl")
-    {
-        Ok(details) => Some(details),
-        Err(e) => {
-            println!("first run of vcpkg did not find libcurl: {}", e);
-            None
-        }
-    };
-
-    if successful_probe_details.is_none() {
-        match vcpkg::Config::new()
-            .lib_name("libcurl")
-            .emit_includes(true)
-            .probe("curl")
-        {
-            Ok(details) => successful_probe_details = Some(details),
-            Err(e) => println!("second run of vcpkg did not find libcurl: {}", e),
-        }
-    }
-
-    if successful_probe_details.is_some() {
-        // Found libcurl which depends on openssl, libssh2 and zlib
-        // in the a default vcpkg installation. Probe for them
-        // but do not fail if they are not present as we may be working
-        // with a customized vcpkg installation.
-        vcpkg::Config::new()
-            .lib_name("libeay32")
-            .lib_name("ssleay32")
-            .probe("openssl")
-            .ok();
-
-        vcpkg::probe_package("libssh2").ok();
-
-        vcpkg::Config::new()
-            .lib_names("zlib", "zlib1")
-            .probe("zlib")
-            .ok();
-
-        println!("cargo:rustc-link-lib=crypt32");
-        println!("cargo:rustc-link-lib=gdi32");
-        println!("cargo:rustc-link-lib=user32");
-        println!("cargo:rustc-link-lib=wldap32");
-        return true;
-    }
-    false
-}
-
-fn try_pkg_config() -> bool {
-    let mut cfg = pkg_config::Config::new();
-    cfg.cargo_metadata(false);
-    let lib = match cfg.probe("libcurl") {
-        Ok(lib) => lib,
-        Err(e) => {
-            println!(
-                "Couldn't find libcurl from pkgconfig ({:?}), \
-                 compiling it from source...",
-                e
-            );
-            return false;
-        }
-    };
-
-    // Not all system builds of libcurl have http2 features enabled, so if we've
-    // got a http2-requested build then we may fall back to a build from source.
-    if cfg!(feature = "http2") && !curl_config_reports_http2() {
-        return false;
-    }
-
-    // Re-find the library to print cargo's metadata, then print some extra
-    // metadata as well.
-    cfg.cargo_metadata(true).probe("libcurl").unwrap();
-    for path in lib.include_paths.iter() {
-        println!("cargo:include={}", path.display());
-    }
-    true
-}
-
-fn xcode_major_version() -> Option<u8> {
-    let status = Command::new("xcode-select").arg("-p").status().ok()?;
-    if status.success() {
-        let output = Command::new("xcodebuild").arg("-version").output().ok()?;
-        if output.status.success() {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            println!("xcode version: {}", stdout);
-            let mut words = stdout.split_whitespace();
-            if words.next()? == "Xcode" {
-                let version = words.next()?;
-                return version[..version.find('.')?].parse().ok();
-            }
-        }
-    }
-    println!("unable to determine Xcode version, assuming >= 9");
-    None
-}
-
-fn curl_config_reports_http2() -> bool {
-    let output = Command::new("curl-config").arg("--features").output();
-    let output = match output {
-        Ok(out) => out,
-        Err(e) => {
-            println!("failed to run curl-config ({}), building from source", e);
-            return false;
-        }
-    };
-    if !output.status.success() {
-        println!("curl-config failed: {}", output.status);
-        return false;
-    }
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    if !stdout.contains("HTTP2") {
-        println!(
-            "failed to find http-2 feature enabled in pkg-config-found \
-             libcurl, building from source"
-        );
-        return false;
-    }
-
-    true
-}
-
-fn macos_link_search_path() -> Option<String> {
-    let output = cc::Build::new()
-        .get_compiler()
-        .to_command()
-        .arg("--print-search-dirs")
-        .output()
-        .ok()?;
-    if !output.status.success() {
-        println!(
-            "failed to run 'clang --print-search-dirs', continuing without a link search path"
-        );
-        return None;
-    }
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    for line in stdout.lines() {
-        if line.contains("libraries: =") {
-            let path = line.split('=').nth(1)?;
-            if !path.is_empty() {
-                return Some(format!("{}/lib/darwin", path));
-            }
-        }
-    }
-
-    println!("failed to determine link search path, continuing without it");
-    None
+    /* NOTE: Disable for only-openssl setup.
+     * if target.contains("-apple-") {
+     *     println!("cargo:rustc-link-lib=framework=Security");
+     *     println!("cargo:rustc-link-lib=framework=CoreFoundation");
+     *     println!("cargo:rustc-link-lib=framework=CoreServices");
+     *     println!("cargo:rustc-link-lib=framework=SystemConfiguration");
+     * }
+     */
 }
