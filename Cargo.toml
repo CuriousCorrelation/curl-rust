@@ -16,14 +16,12 @@ edition = "2018"
 libc = "0.2.42"
 curl-sys = { path = "curl-sys", version = "0.4.77", default-features = false }
 socket2 = "0.5.0"
+# NOTE: Use OpenSSL for all platforms
+openssl-sys = "0.9.64"
+openssl-probe = "0.1.2"
 
-# Unix platforms use OpenSSL for now to provide SSL functionality
-[target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
-openssl-sys = { version = "0.9.64", optional = true }
-openssl-probe = { version = "0.1.2", optional = true }
-
-[target.'cfg(target_env = "msvc")'.dependencies]
-schannel = "0.1.13"
+[target.'cfg(windows)'.dependencies]
+# NOTE: Removed schannel dependency as we're using OpenSSL
 windows-sys = { version = "0.52", features = ["Win32_Foundation", "Win32_System_LibraryLoader", "Win32_Security_Cryptography"] }
 
 [dev-dependencies]
@@ -35,16 +33,12 @@ anyhow = "1.0.31"
 members = ["systest"]
 
 [features]
-default = ["ssl"]
-ssl = ["openssl-sys", "openssl-probe", "curl-sys/ssl"] # OpenSSL/system TLS backend
-mesalink = ["curl-sys/mesalink"] # MesaLink TLS backend
+default = ["ssl"]  # NOTE: Keep this for now, but we might want to remove non-OpenSSL options later
+ssl = ["curl-sys/ssl"]
 http2 = ["curl-sys/http2"]
 spnego = ["curl-sys/spnego"]
-rustls = ["curl-sys/rustls"]
 static-curl = ["curl-sys/static-curl"]
 static-ssl = ["curl-sys/static-ssl"]
-windows-static-ssl = ["static-curl", "curl-sys/windows-static-ssl"]
-force-system-lib-on-osx = ['curl-sys/force-system-lib-on-osx']
 protocol-ftp = ["curl-sys/protocol-ftp"]
 zlib-ng-compat = ["curl-sys/zlib-ng-compat", "static-curl"]
 upkeep_7_62_0 = ["curl-sys/upkeep_7_62_0"]
