@@ -2,14 +2,18 @@
 #![doc(html_root_url = "https://docs.rs/curl-sys/0.4")]
 
 // These `extern crate` are required for conditional linkages of curl.
-#[cfg(link_libnghttp2)]
-extern crate libnghttp2_sys;
+/* NOTE: Disable for only-openssl setup.
+ * #[cfg(link_libnghttp2)]
+ * extern crate libnghttp2_sys;
+ */
 #[cfg(link_libz)]
 extern crate libz_sys;
-#[cfg(link_openssl)]
+// NOTE: Always link openssl #[cfg(link_openssl)]
 extern crate openssl_sys;
-#[cfg(feature = "rustls")]
-extern crate rustls_ffi;
+/* NOTE: Disable for only-openssl setup.
+ * #[cfg(feature = "rustls")]
+ * extern crate rustls_ffi;
+ */
 
 use libc::c_ulong;
 use libc::{c_char, c_double, c_int, c_long, c_short, c_uint, c_void, size_t, time_t};
