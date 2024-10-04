@@ -30,11 +30,11 @@ cc = "1.0"
 vcpkg = "0.2"
 
 [features]
-default = ["ssl"]
-ssl = [] # NOTE: OpenSSL is now the default and only SSL backend
-http2 = ["libnghttp2-sys"]
-static-curl = []
+default = ["ssl", "static-ssl"]
+ssl = []
 static-ssl = ["openssl-sys/vendored"]
+http2 = []
+static-curl = []
 protocol-ftp = []
 ntlm = []
 poll_7_68_0 = []

@@ -26,6 +26,9 @@ fn main() {
     println!("cargo:rustc-check-cfg=cfg(libcurl_vendored)");
     println!("cargo:rustc-cfg=link_libz");
     println!("cargo:rustc-cfg=link_openssl");
+    if cfg!(feature = "static-ssl") {
+        println!("cargo:rustc-cfg=link_static_openssl");
+    }
     let target = env::var("TARGET").unwrap();
     let windows = target.contains("windows");
 
@@ -381,6 +384,14 @@ fn main() {
     // NOTE: Always use OpenSSL.
     cfg.define("USE_OPENSSL", None)
         .file("curl/lib/vtls/openssl.c");
+
+    // NOTE: Guarantee static!
+    #[cfg(feature = "static-ssl")]
+    {
+        cfg.define("CURL_STATICLIB", None);
+        cfg.define("OPENSSL_STATIC", None);
+    }
+
     println!("cargo:rustc-cfg=link_openssl");
     if let Some(path) = env::var_os("DEP_OPENSSL_INCLUDE") {
         cfg.include(path);

@@ -33,12 +33,12 @@ anyhow = "1.0.31"
 members = ["systest"]
 
 [features]
-default = ["ssl"]  # NOTE: Keep this for now, but we might want to remove non-OpenSSL options later
+default = ["ssl", "static-ssl"]  # NOTE: Keep `ssl` for now, but we might want to remove non-OpenSSL options later
 ssl = ["curl-sys/ssl"]
+static-ssl = ["curl-sys/static-ssl"]
+static-curl = ["curl-sys/static-curl"]
 http2 = ["curl-sys/http2"]
 spnego = ["curl-sys/spnego"]
-static-curl = ["curl-sys/static-curl"]
-static-ssl = ["curl-sys/static-ssl"]
 protocol-ftp = ["curl-sys/protocol-ftp"]
 zlib-ng-compat = ["curl-sys/zlib-ng-compat", "static-curl"]
 upkeep_7_62_0 = ["curl-sys/upkeep_7_62_0"]
