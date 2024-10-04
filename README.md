@@ -1,4 +1,4 @@
-# curl-rust
+# curl-rust (OpenSSL-only fork)
 
 [libcurl] bindings for Rust
 
