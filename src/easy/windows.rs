@@ -2,6 +2,7 @@
 
 use libc::c_void;
 
+/* NOTE: Disable for only-openssl setup.
 #[cfg(target_env = "msvc")]
 mod win {
     use schannel::cert_context::ValidUses;
@@ -115,13 +116,17 @@ mod win {
         }
     }
 }
+*/
 
+/* NOTE: Disable for only-openssl setup.
 #[cfg(target_env = "msvc")]
 pub fn add_certs_to_context(ssl_ctx: *mut c_void) {
     unsafe {
         win::add_certs_to_context(ssl_ctx as *mut _);
     }
 }
+*/
 
+// NOTE: Keeping this for OpenSSL setup.
 #[cfg(not(target_env = "msvc"))]
 pub fn add_certs_to_context(_: *mut c_void) {}
