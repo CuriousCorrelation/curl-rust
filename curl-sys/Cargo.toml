@@ -22,7 +22,7 @@ libc = "0.2.2"
 openssl-sys = { version = "0.9.64", features = ["vendored"] }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.52", features = ["Win32_Networking_WinSock"] }
+windows-sys = { version = "0.59.0", features = ["Win32_Networking_WinSock"] }
 
 [build-dependencies]
 pkg-config = "0.3.3"
