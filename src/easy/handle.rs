@@ -135,13 +135,10 @@ impl Easy {
             eprintln!("Warning: Failed to set SSL cert type: {}", e);
         }
 
-        let cert_path = curl_sys::get_cert_path();
-        if cert_path.exists() {
-            if let Err(e) = easy.cainfo(cert_path.to_str().unwrap()) {
-                eprintln!("Warning: Failed to set CA info: {}", e);
-            }
-        } else {
-            eprintln!("Warning: Certificate file not found at {:?}", cert_path);
+        let cert_blob = curl_sys::certs::get_cert_content().as_bytes();
+
+        if let Err(e) = easy.ssl_cainfo_blob(cert_blob) {
+            eprintln!("Warning: Failed to set CA info: {}", e);
         }
 
         easy

@@ -515,12 +515,16 @@ fn main() {
     let cert_file = Path::new("cacert.pem");
     let dest_path = Path::new(&out_dir).join("cacert.pem");
     println!("cargo:rerun-if-changed=cacert.pem");
+
     println!(
         "Debug: Copying certificate from {:?} to {:?}",
         cert_file, dest_path
     );
     fs::copy(cert_file, &dest_path).expect("Failed to copy cacert.pem");
-    println!("Debug: Certificate copied successfully");
 
-    println!("cargo:rerun-if-changed=cacert.pem");
+    if !dest_path.exists() {
+        panic!("Failed to copy cacert.pem to the output directory");
+    }
+
+    println!("Debug: Certificate copied successfully");
 }

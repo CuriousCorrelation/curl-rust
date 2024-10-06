@@ -43,7 +43,8 @@ use crate::Error;
 /// }
 ///
 /// let mut easy = Easy2::new(Collector(Vec::new()));
-/// easy.cainfo(curl_sys::get_cert_path().to_str().unwrap()).unwrap();
+/// let cert_blob = curl_sys::certs::get_cert_content().as_bytes();
+/// easy.ssl_cainfo_blob(cert_blob).unwrap();
 /// easy.get(true).unwrap();
 /// easy.url("https://www.rust-lang.org/").unwrap();
 /// easy.perform().unwrap();
@@ -604,8 +605,10 @@ impl<H: Handler> Easy2<H> {
 
             ret.default_configure();
 
+            let cert_blob = curl_sys::certs::get_cert_content().as_bytes();
+
             // Set the SSL certificate
-            if let Err(e) = ret.cainfo(curl_sys::get_cert_path().to_str().unwrap()) {
+            if let Err(e) = ret.ssl_cainfo_blob(cert_blob) {
                 eprintln!("Warning: Failed to set SSL certificate: {}", e);
             }
 

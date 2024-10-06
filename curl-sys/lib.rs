@@ -1,12 +1,13 @@
 #![allow(bad_style)]
 #![doc(html_root_url = "https://docs.rs/curl-sys/0.4")]
 
+pub mod certs;
+
 // These `extern crate` are required for conditional linkages of curl.
 /* NOTE: Disable for only-openssl setup.
  * #[cfg(link_libnghttp2)]
  * extern crate libnghttp2_sys;
  */
-#[cfg(link_libz)]
 extern crate libz_sys;
 // NOTE: Always link openssl #[cfg(link_openssl)]
 extern crate openssl_sys;
@@ -24,8 +25,6 @@ pub use libc::fd_set;
 pub use windows_sys::Win32::Networking::WinSock::FD_SET as fd_set;
 #[cfg(windows)]
 use windows_sys::Win32::Networking::WinSock::SOCKADDR;
-
-mod certs;
 
 #[cfg(target_env = "msvc")]
 #[doc(hidden)]
@@ -1182,17 +1181,4 @@ pub fn rust_crate_version() -> &'static str {
 #[doc(hidden)]
 pub fn vendored() -> bool {
     cfg!(libcurl_vendored)
-}
-
-use std::env;
-use std::path::PathBuf;
-
-pub fn get_cert_path() -> PathBuf {
-    let out_dir = env::var("OUT_DIR").unwrap_or_else(|_| ".".to_string());
-    let cert_path = PathBuf::from(out_dir).join("cacert.pem");
-    println!("Debug: Certificate path: {:?}", cert_path);
-    if !cert_path.exists() {
-        eprintln!("Warning: Certificate file not found at {:?}", cert_path);
-    }
-    cert_path
 }
