@@ -14,7 +14,7 @@ edition = "2018"
 
 [dependencies]
 libc = "0.2.42"
-curl-sys = { path = "curl-sys", version = "0.4.77", default-features = false }
+curl-sys = { path = "curl-sys", version = "0.4.77", default-features = false, features = ["static-ssl"] }
 socket2 = "0.5.0"
 # NOTE: Use OpenSSL for all platforms
 openssl-sys = "0.9.64"

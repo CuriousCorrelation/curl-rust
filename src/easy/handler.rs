@@ -29,19 +29,21 @@ use crate::Error;
 ///
 /// # Examples
 ///
-/// ```
-/// use curl::easy::{Easy2, Handler, WriteError};
+/// ```rust,no_run
+/// use curl::easy::{Easy2, Handler};
+/// use std::io::Write;
 ///
 /// struct Collector(Vec<u8>);
 ///
 /// impl Handler for Collector {
-///     fn write(&mut self, data: &[u8]) -> Result<usize, WriteError> {
+///     fn write(&mut self, data: &[u8]) -> Result<usize, curl::easy::WriteError> {
 ///         self.0.extend_from_slice(data);
 ///         Ok(data.len())
 ///     }
 /// }
 ///
 /// let mut easy = Easy2::new(Collector(Vec::new()));
+/// easy.cainfo(curl_sys::get_cert_path().to_str().unwrap()).unwrap();
 /// easy.get(true).unwrap();
 /// easy.url("https://www.rust-lang.org/").unwrap();
 /// easy.perform().unwrap();
@@ -599,11 +601,17 @@ impl<H: Handler> Easy2<H> {
                     handler,
                 }),
             };
+
             ret.default_configure();
+
+            // Set the SSL certificate
+            if let Err(e) = ret.cainfo(curl_sys::get_cert_path().to_str().unwrap()) {
+                eprintln!("Warning: Failed to set SSL certificate: {}", e);
+            }
+
             ret
         }
     }
-
     /// Re-initializes this handle to the default values.
     ///
     /// This puts the handle to the same state as it was in when it was just

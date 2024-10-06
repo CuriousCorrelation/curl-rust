@@ -19,7 +19,7 @@ path = "lib.rs"
 [dependencies]
 libz-sys = { version = "1.0.18", default-features = false, features = ["libc"] }
 libc = "0.2.2"
-openssl-sys = "0.9.64"
+openssl-sys = { version = "0.9.64", features = ["vendored"] }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.52", features = ["Win32_Networking_WinSock"] }

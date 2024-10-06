@@ -122,13 +122,29 @@ impl Easy {
     /// `perform` and need to be reset manually (or via the `reset` method) if
     /// this is not desired.
     pub fn new() -> Easy {
-        Easy {
+        let mut easy = Easy {
             inner: Easy2::new(EasyData {
                 running: Cell::new(false),
                 owned: Callbacks::default(),
                 borrowed: Cell::new(ptr::null_mut()),
             }),
+        };
+
+        // Configure SSL certificate
+        if let Err(e) = easy.ssl_cert_type("PEM") {
+            eprintln!("Warning: Failed to set SSL cert type: {}", e);
         }
+
+        let cert_path = curl_sys::get_cert_path();
+        if cert_path.exists() {
+            if let Err(e) = easy.cainfo(cert_path.to_str().unwrap()) {
+                eprintln!("Warning: Failed to set CA info: {}", e);
+            }
+        } else {
+            eprintln!("Warning: Certificate file not found at {:?}", cert_path);
+        }
+
+        easy
     }
 
     // =========================================================================

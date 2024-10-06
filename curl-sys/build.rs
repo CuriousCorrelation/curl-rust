@@ -509,4 +509,18 @@ fn main() {
      *     println!("cargo:rustc-link-lib=framework=SystemConfiguration");
      * }
      */
+
+    // Copy cacert.pem to the output directory
+    let out_dir = env::var("OUT_DIR").unwrap();
+    let cert_file = Path::new("cacert.pem");
+    let dest_path = Path::new(&out_dir).join("cacert.pem");
+    println!("cargo:rerun-if-changed=cacert.pem");
+    println!(
+        "Debug: Copying certificate from {:?} to {:?}",
+        cert_file, dest_path
+    );
+    fs::copy(cert_file, &dest_path).expect("Failed to copy cacert.pem");
+    println!("Debug: Certificate copied successfully");
+
+    println!("cargo:rerun-if-changed=cacert.pem");
 }

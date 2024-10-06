@@ -25,6 +25,8 @@ pub use windows_sys::Win32::Networking::WinSock::FD_SET as fd_set;
 #[cfg(windows)]
 use windows_sys::Win32::Networking::WinSock::SOCKADDR;
 
+mod certs;
+
 #[cfg(target_env = "msvc")]
 #[doc(hidden)]
 pub type __enum_ty = libc::c_int;
@@ -1180,4 +1182,17 @@ pub fn rust_crate_version() -> &'static str {
 #[doc(hidden)]
 pub fn vendored() -> bool {
     cfg!(libcurl_vendored)
+}
+
+use std::env;
+use std::path::PathBuf;
+
+pub fn get_cert_path() -> PathBuf {
+    let out_dir = env::var("OUT_DIR").unwrap_or_else(|_| ".".to_string());
+    let cert_path = PathBuf::from(out_dir).join("cacert.pem");
+    println!("Debug: Certificate path: {:?}", cert_path);
+    if !cert_path.exists() {
+        eprintln!("Warning: Certificate file not found at {:?}", cert_path);
+    }
+    cert_path
 }
