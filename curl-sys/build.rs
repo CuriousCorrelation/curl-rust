@@ -1,3 +1,8 @@
+#[cfg(not(feature = "static-ssl"))]
+compile_error!("This crate must be built with the 'static-ssl' feature enabled");
+
+#[cfg(not(feature = "static-curl"))]
+compile_error!("This crate must be built with the 'static-curl' feature enabled");
 /// This is a fork of rust-curl that forces openssl-only setup.
 ///
 /// Platform-specific functions that have been removed:
@@ -383,6 +388,7 @@ fn main() {
 
     // NOTE: Always use OpenSSL.
     cfg.define("USE_OPENSSL", None)
+        .define("HAVE_OPENSSL_SSL_H", None)
         .file("curl/lib/vtls/openssl.c");
 
     // NOTE: Guarantee static!

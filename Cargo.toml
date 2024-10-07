@@ -16,8 +16,8 @@ edition = "2018"
 libc = "0.2.42"
 curl-sys = { path = "curl-sys", version = "0.4.77", default-features = false, features = ["static-ssl"] }
 socket2 = "0.5.0"
-# NOTE: Use OpenSSL for all platforms
-openssl-sys = "0.9.64"
+# NOTE: Use OpenSSL for all platforms and compile + statically link to a copy of OpenSSL from `openssl-src`.
+openssl-sys = { version = "0.9.64", features = ["vendored"] }
 openssl-probe = "0.1.2"
 
 [target.'cfg(windows)'.dependencies]
@@ -33,7 +33,7 @@ anyhow = "1.0.31"
 members = ["systest"]
 
 [features]
-default = ["ssl", "static-ssl"]  # NOTE: Keep `ssl` for now, but we might want to remove non-OpenSSL options later
+default = ["ssl", "static-ssl", "static-curl"]  # NOTE: Keep `ssl` for now, but we might want to remove non-OpenSSL options later
 ssl = ["curl-sys/ssl"]
 static-ssl = ["curl-sys/static-ssl"]
 static-curl = ["curl-sys/static-curl"]

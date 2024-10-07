@@ -1,0 +1,5 @@
+[target.'cfg(all())']
+rustflags = ["-C", "target-feature=+crt-static"]
+
+[build]
+rustflags = ["--cfg=openssl_vendored"]

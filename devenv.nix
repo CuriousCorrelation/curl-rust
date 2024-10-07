@@ -4,7 +4,6 @@
   # https://devenv.sh/packages/
   packages = with pkgs; [
     git
-    openssl
   ];
 
   # https://devenv.sh/basics/

@@ -1,3 +1,6 @@
+#[cfg(not(feature = "static-ssl"))]
+compile_error!("This crate must be built with the 'static-ssl' feature enabled");
+
 use std::env;
 
 fn main() {
