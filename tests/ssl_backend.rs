@@ -121,9 +121,8 @@ fn test_ssl_backend() {
     let mut easy = Easy::new();
     easy.ssl_cert_blob(EXAMPLE_COM_CERT.as_bytes()).unwrap();
     easy.ssl_key_blob(EXAMPLE_COM_KEY.as_bytes()).unwrap();
-    // We're using a self-signed cert, so we need to disable verification.
-    easy.ssl_verify_host(false).unwrap();
-    easy.ssl_verify_peer(false).unwrap();
+    easy.ssl_verify_host(true).unwrap();
+    easy.ssl_verify_peer(true).unwrap();
     // Use a URL that doesn't actually require client certs, just to test the setup.
     easy.url("https://example.com").unwrap();
     let result = easy.perform();
