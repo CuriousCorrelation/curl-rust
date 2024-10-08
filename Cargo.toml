@@ -14,15 +14,13 @@ edition = "2018"
 
 [dependencies]
 libc = "0.2.42"
-curl-sys = { path = "curl-sys", version = "0.4.77", default-features = false, features = ["static-ssl"] }
+curl-sys = { path = "curl-sys", version = "0.4.77" }
 socket2 = "0.5.0"
 # NOTE: Use OpenSSL for all platforms and compile + statically link to a copy of OpenSSL from `openssl-src`.
 openssl-sys = { version = "0.9.64", features = ["vendored"] }
 openssl-probe = "0.1.2"
 
-[target.'cfg(windows)'.dependencies]
-# NOTE: Removed schannel dependency as we're using OpenSSL
-windows-sys = { version = "0.52", features = ["Win32_Foundation", "Win32_System_LibraryLoader", "Win32_Security_Cryptography"] }
+# NOTE: Removed `schannel` and `windows-sys` dependency as we're using OpenSSL on windows as well.
 
 [dev-dependencies]
 mio = "0.6"
@@ -33,14 +31,10 @@ anyhow = "1.0.31"
 members = ["systest"]
 
 [features]
-default = ["ssl", "static-ssl", "static-curl"]  # NOTE: Keep `ssl` for now, but we might want to remove non-OpenSSL options later
-ssl = ["curl-sys/ssl"]
-static-ssl = ["curl-sys/static-ssl"]
-static-curl = ["curl-sys/static-curl"]
 http2 = ["curl-sys/http2"]
 spnego = ["curl-sys/spnego"]
 protocol-ftp = ["curl-sys/protocol-ftp"]
-zlib-ng-compat = ["curl-sys/zlib-ng-compat", "static-curl"]
+zlib-ng-compat = ["curl-sys/zlib-ng-compat"]
 upkeep_7_62_0 = ["curl-sys/upkeep_7_62_0"]
 poll_7_68_0 = ["curl-sys/poll_7_68_0"]
 ntlm = ["curl-sys/ntlm"]
@@ -56,24 +50,19 @@ path = "examples/https.rs"
 [[example]]
 name = "ssl_proxy"
 path = "examples/ssl_proxy.rs"
-required-features = ["ssl"]
 
 [[example]]
 name = "ssl_cert_blob"
 path = "examples/ssl_cert_blob.rs"
-required-features = ["ssl"]
 
 [[example]]
 name = "ssl_client_auth"
 path = "examples/ssl_client_auth.rs"
-required-features = []
 
 [[example]]
 name = "aws_sigv4"
 path = "examples/aws_sigv4.rs"
-required-features = ["static-curl", "ssl"]
 
 [[example]]
 name = "multi-dl"
 path = "examples/multi-dl.rs"
-required-features = ["ssl"]
