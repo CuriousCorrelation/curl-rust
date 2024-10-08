@@ -1,8 +1,3 @@
-#[cfg(not(feature = "static-ssl"))]
-compile_error!("This crate must be built with the 'static-ssl' feature enabled");
-
-#[cfg(not(feature = "static-curl"))]
-compile_error!("This crate must be built with the 'static-curl' feature enabled");
 /// This is a fork of rust-curl that forces openssl-only setup.
 ///
 /// Platform-specific functions that have been removed:
@@ -17,23 +12,16 @@ use std::process::Command;
 
 fn main() {
     println!("cargo:rerun-if-changed=curl");
-    /* NOTE: Disable for only-openssl setup.
-     *
-     * println!(
-     *     "cargo:rustc-check-cfg=cfg(\
-     *         libcurl_vendored,\
-     *         link_libnghttp2,\
-     *         link_libz,\
-     *         link_openssl,\
-     *     )"
-     * );
-     */
-    println!("cargo:rustc-check-cfg=cfg(libcurl_vendored)");
-    println!("cargo:rustc-cfg=link_libz");
-    println!("cargo:rustc-cfg=link_openssl");
-    if cfg!(feature = "static-ssl") {
-        println!("cargo:rustc-cfg=link_static_openssl");
-    }
+
+    println!(
+        "cargo:rustc-check-cfg=cfg(\
+             libcurl_vendored,\
+             link_libnghttp2,\
+             link_libz,\
+             link_openssl,\
+         )"
+    );
+
     let target = env::var("TARGET").unwrap();
     let windows = target.contains("windows");
 
@@ -388,16 +376,11 @@ fn main() {
 
     // NOTE: Always use OpenSSL.
     cfg.define("USE_OPENSSL", None)
+        // NOTE: Make sure OPENSSL headers are present.
         .define("HAVE_OPENSSL_SSL_H", None)
         .file("curl/lib/vtls/openssl.c");
 
-    // NOTE: Guarantee static!
-    #[cfg(feature = "static-ssl")]
-    {
-        cfg.define("CURL_STATICLIB", None);
-        cfg.define("OPENSSL_STATIC", None);
-    }
-
+    // NOTE: Always include OpenSSL paths.
     println!("cargo:rustc-cfg=link_openssl");
     if let Some(path) = env::var_os("DEP_OPENSSL_INCLUDE") {
         cfg.include(path);
@@ -507,30 +490,10 @@ fn main() {
         println!("cargo:rustc-link-lib=nsl");
     }
 
-    /* NOTE: Disable for only-openssl setup.
-     * if target.contains("-apple-") {
-     *     println!("cargo:rustc-link-lib=framework=Security");
-     *     println!("cargo:rustc-link-lib=framework=CoreFoundation");
-     *     println!("cargo:rustc-link-lib=framework=CoreServices");
-     *     println!("cargo:rustc-link-lib=framework=SystemConfiguration");
-     * }
-     */
-
-    // Copy cacert.pem to the output directory
-    let out_dir = env::var("OUT_DIR").unwrap();
-    let cert_file = Path::new("cacert.pem");
-    let dest_path = Path::new(&out_dir).join("cacert.pem");
-    println!("cargo:rerun-if-changed=cacert.pem");
-
-    println!(
-        "Debug: Copying certificate from {:?} to {:?}",
-        cert_file, dest_path
-    );
-    fs::copy(cert_file, &dest_path).expect("Failed to copy cacert.pem");
-
-    if !dest_path.exists() {
-        panic!("Failed to copy cacert.pem to the output directory");
+    if target.contains("-apple-") {
+        println!("cargo:rustc-link-lib=framework=Security");
+        println!("cargo:rustc-link-lib=framework=CoreFoundation");
+        println!("cargo:rustc-link-lib=framework=CoreServices");
+        println!("cargo:rustc-link-lib=framework=SystemConfiguration");
     }
-
-    println!("Debug: Certificate copied successfully");
 }
