@@ -685,7 +685,7 @@ impl<H: Handler> Easy2<H> {
             .expect("failed to set open socket callback");
     }
 
-    #[cfg(need_openssl_probe)]
+    // NOTE: We always use OpenSSL and probe for certificates.
     fn ssl_configure(&mut self) {
         use std::sync::Once;
 
@@ -706,9 +706,6 @@ impl<H: Handler> Easy2<H> {
             let _ = self.capath(path);
         }
     }
-
-    #[cfg(not(need_openssl_probe))]
-    fn ssl_configure(&mut self) {}
 }
 
 impl<H> Easy2<H> {
