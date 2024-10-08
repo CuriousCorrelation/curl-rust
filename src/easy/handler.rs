@@ -602,19 +602,11 @@ impl<H: Handler> Easy2<H> {
                     handler,
                 }),
             };
-
             ret.default_configure();
-
-            let cert_blob = curl_sys::certs::get_cert_content().as_bytes();
-
-            // Set the SSL certificate
-            if let Err(e) = ret.ssl_cainfo_blob(cert_blob) {
-                eprintln!("Warning: Failed to set SSL certificate: {}", e);
-            }
-
             ret
         }
     }
+
     /// Re-initializes this handle to the default values.
     ///
     /// This puts the handle to the same state as it was in when it was just
@@ -704,6 +696,12 @@ impl<H: Handler> Easy2<H> {
         }
         if let Some(ref path) = probe.cert_dir {
             let _ = self.capath(path);
+        }
+
+        // NOTE: If no system certificates are found, use bundled certificates.
+        if probe.cert_file.is_none() && probe.cert_dir.is_none() {
+            let cert_blob = curl_sys::certs::get_cert_content().as_bytes();
+            let _ = self.ssl_cainfo_blob(cert_blob);
         }
     }
 }
