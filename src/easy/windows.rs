@@ -118,11 +118,5 @@ mod win {
 }
 */
 
-// NOTE: Disable for only-openssl setup,
-// so this is a no-op function right now, used on all Windows environments.
-#[cfg(target_env = "msvc")]
-pub fn add_certs_to_context(ssl_ctx: *mut c_void) {}
-
 // NOTE: Keeping this for OpenSSL setup.
-#[cfg(not(target_env = "msvc"))]
 pub fn add_certs_to_context(_: *mut c_void) {}

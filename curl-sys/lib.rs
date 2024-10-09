@@ -26,10 +26,6 @@ pub use windows_sys::Win32::Networking::WinSock::FD_SET as fd_set;
 #[cfg(windows)]
 use windows_sys::Win32::Networking::WinSock::SOCKADDR;
 
-#[cfg(target_env = "msvc")]
-#[doc(hidden)]
-pub type __enum_ty = libc::c_int;
-#[cfg(not(target_env = "msvc"))]
 #[doc(hidden)]
 pub type __enum_ty = libc::c_uint;
 
