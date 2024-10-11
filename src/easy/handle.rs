@@ -130,11 +130,6 @@ impl Easy {
             }),
         };
 
-        // Configure SSL certificate
-        if let Err(e) = easy.ssl_cert_type("PEM") {
-            eprintln!("Warning: Failed to set SSL cert type: {}", e);
-        }
-
         let cert_blob = curl_sys::certs::get_cert_content().as_bytes();
 
         if let Err(e) = easy.ssl_cainfo_blob(cert_blob) {
