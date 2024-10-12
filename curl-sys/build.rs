@@ -277,21 +277,18 @@ fn main() {
         cfg.define("CURL_DISABLE_FTP", None);
     }
 
-    /* NOTE: Disable for only-openssl setup.
-    *
-    * if cfg!(feature = "http2") {
-    *     cfg.define("USE_NGHTTP2", None)
-    *         .define("NGHTTP2_STATICLIB", None)
-    *         .file("curl/lib/cf-h2-proxy.c")
-    *         .file("curl/lib/http2.c");
+    if cfg!(feature = "http2") {
+        cfg.define("USE_NGHTTP2", None)
+            .define("NGHTTP2_STATICLIB", None)
+            .file("curl/lib/cf-h2-proxy.c")
+            .file("curl/lib/http2.c");
 
-    *     println!("cargo:rustc-cfg=link_libnghttp2");
-    *     if let Some(path) = env::var_os("DEP_NGHTTP2_ROOT") {
-    *         let path = PathBuf::from(path);
-    *         cfg.include(path.join("include"));
-    *     }
-    * }
-    */
+        println!("cargo:rustc-cfg=link_libnghttp2");
+        if let Some(path) = env::var_os("DEP_NGHTTP2_ROOT") {
+            let path = PathBuf::from(path);
+            cfg.include(path.join("include"));
+        }
+    }
 
     println!("cargo:rustc-cfg=link_libz");
     if let Some(path) = env::var_os("DEP_Z_INCLUDE") {
