@@ -16,7 +16,10 @@ edition = "2018"
 libc = "0.2.42"
 curl-sys = { path = "curl-sys", version = "0.4.77" }
 socket2 = "0.5.0"
-# NOTE: Use OpenSSL for all platforms and compile + statically link to a copy of OpenSSL from `openssl-src`.
+# NOTE: We use OpenSSL for all platforms and compile + statically link to a copy of OpenSSL from `openssl-src`.
+#       Since we already depend on the `openssl-sys/vendored` in `curl-sys`,
+#       there's no need to pull compiled dependency just for `openssl_sys::init();` call in `lib.rs`,
+#       we can just reuse the same dependency used by `curl-sys`.
 openssl-sys = { version = "0.9.64", features = ["vendored"] }
 openssl-probe = "0.1.2"
 
