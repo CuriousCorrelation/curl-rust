@@ -9,6 +9,7 @@ fn main() {
     );
 
     /* NOTE: Only-openssl setup so we're always using OpenSSL now, so we always need to check its version.
+    *
     * // OpenSSL >= 1.1.0 can be initialized concurrently and is initialized correctly by libcurl.
     * // <= 1.0.2 need locking callbacks, which are provided by openssl_sys::init().
     * let use_openssl = match env::var("DEP_OPENSSL_VERSION_NUMBER") {

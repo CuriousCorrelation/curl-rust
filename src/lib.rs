@@ -94,8 +94,9 @@ pub fn init() {
     static INIT: Once = Once::new();
 
     INIT.call_once(|| {
-        // NOTE: We always make sure to initialize OpenSSL.
+        #[cfg(need_openssl_init)]
         openssl_probe::init_ssl_cert_env_vars();
+        #[cfg(need_openssl_init)]
         openssl_sys::init();
 
         unsafe {
