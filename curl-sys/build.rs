@@ -4,7 +4,6 @@
 /// - try_vcpkg()
 /// - try_pkg_config()
 /// - curl_config_reports_http2()
-/// - macos_link_search_path()
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -371,6 +370,8 @@ fn main() {
     // NOTE: Always use OpenSSL.
     cfg.define("USE_OPENSSL", None)
         // NOTE: Make sure OPENSSL headers are present.
+        //       Not sure why but this fixes a wall of error text
+        //       due to some linking errors on Windows.
         .define("HAVE_OPENSSL_SSL_H", None)
         .file("curl/lib/vtls/openssl.c");
 
