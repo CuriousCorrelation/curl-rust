@@ -294,14 +294,14 @@ fn main() {
         cfg.include(path);
     }
 
+    if cfg!(feature = "spnego") {
+        cfg.define("USE_SPNEGO", None)
+            .file("curl/lib/http_negotiate.c")
+            .file("curl/lib/vauth/vauth.c");
+    }
+
     /* NOTE: Disable for only-openssl setup.
      *
-     * if cfg!(feature = "spnego") {
-     *     cfg.define("USE_SPNEGO", None)
-     *         .file("curl/lib/http_negotiate.c")
-     *         .file("curl/lib/vauth/vauth.c");
-     * }
-
      * // Configure TLS backend. Since Cargo does not support mutually exclusive
      * // features, make sure we only compile one vtls.
      * if cfg!(feature = "rustls") {
