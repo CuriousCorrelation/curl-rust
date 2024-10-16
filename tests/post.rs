@@ -63,7 +63,6 @@ fn custom() {
     t!(handle.perform());
 }
 
-#[cfg(feature = "static-curl")]
 #[test]
 fn buffer() {
     let s = Server::new();
@@ -97,7 +96,6 @@ fn buffer() {
     t!(handle.perform());
 }
 
-#[cfg(feature = "static-curl")]
 #[test]
 fn file() {
     let s = Server::new();

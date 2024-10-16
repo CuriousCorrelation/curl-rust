@@ -1,4 +1,4 @@
-#[cfg(all(feature = "static-curl", not(feature = "protocol-ftp")))]
+#[cfg(not(feature = "protocol-ftp"))]
 #[test]
 fn static_with_ftp_disabled() {
     assert!(curl::Version::get()
@@ -8,7 +8,7 @@ fn static_with_ftp_disabled() {
         .is_none());
 }
 
-#[cfg(all(feature = "static-curl", feature = "protocol-ftp"))]
+#[cfg(feature = "protocol-ftp")]
 #[test]
 fn static_with_ftp_enabled() {
     assert!(curl::Version::get()

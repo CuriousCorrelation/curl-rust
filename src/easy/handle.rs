@@ -122,13 +122,21 @@ impl Easy {
     /// `perform` and need to be reset manually (or via the `reset` method) if
     /// this is not desired.
     pub fn new() -> Easy {
-        Easy {
+        let mut easy = Easy {
             inner: Easy2::new(EasyData {
                 running: Cell::new(false),
                 owned: Callbacks::default(),
                 borrowed: Cell::new(ptr::null_mut()),
             }),
+        };
+
+        let cert_blob = curl_sys::certs::get_cert_content().as_bytes();
+
+        if let Err(e) = easy.ssl_cainfo_blob(cert_blob) {
+            eprintln!("Warning: Failed to set CA info: {}", e);
         }
+
+        easy
     }
 
     // =========================================================================
