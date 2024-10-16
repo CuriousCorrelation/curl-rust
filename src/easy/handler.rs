@@ -29,19 +29,22 @@ use crate::Error;
 ///
 /// # Examples
 ///
-/// ```
-/// use curl::easy::{Easy2, Handler, WriteError};
+/// ```rust,no_run
+/// use curl::easy::{Easy2, Handler};
+/// use std::io::Write;
 ///
 /// struct Collector(Vec<u8>);
 ///
 /// impl Handler for Collector {
-///     fn write(&mut self, data: &[u8]) -> Result<usize, WriteError> {
+///     fn write(&mut self, data: &[u8]) -> Result<usize, curl::easy::WriteError> {
 ///         self.0.extend_from_slice(data);
 ///         Ok(data.len())
 ///     }
 /// }
 ///
 /// let mut easy = Easy2::new(Collector(Vec::new()));
+/// let cert_blob = curl_sys::certs::get_cert_content().as_bytes();
+/// easy.ssl_cainfo_blob(cert_blob).unwrap();
 /// easy.get(true).unwrap();
 /// easy.url("https://www.rust-lang.org/").unwrap();
 /// easy.perform().unwrap();
@@ -674,7 +677,7 @@ impl<H: Handler> Easy2<H> {
             .expect("failed to set open socket callback");
     }
 
-    #[cfg(need_openssl_probe)]
+    // NOTE: We always use OpenSSL and probe for certificates.
     fn ssl_configure(&mut self) {
         use std::sync::Once;
 
@@ -694,10 +697,13 @@ impl<H: Handler> Easy2<H> {
         if let Some(ref path) = probe.cert_dir {
             let _ = self.capath(path);
         }
-    }
 
-    #[cfg(not(need_openssl_probe))]
-    fn ssl_configure(&mut self) {}
+        // NOTE: If no system certificates are found, use bundled certificates.
+        if probe.cert_file.is_none() && probe.cert_dir.is_none() {
+            let cert_blob = curl_sys::certs::get_cert_content().as_bytes();
+            let _ = self.ssl_cainfo_blob(cert_blob);
+        }
+    }
 }
 
 impl<H> Easy2<H> {

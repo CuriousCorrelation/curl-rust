@@ -1,15 +1,20 @@
 #![allow(bad_style)]
 #![doc(html_root_url = "https://docs.rs/curl-sys/0.4")]
 
+pub mod certs;
+
 // These `extern crate` are required for conditional linkages of curl.
-#[cfg(link_libnghttp2)]
-extern crate libnghttp2_sys;
-#[cfg(link_libz)]
+/* NOTE: Disable for only-openssl setup.
+ * #[cfg(link_libnghttp2)]
+ * extern crate libnghttp2_sys;
+ */
 extern crate libz_sys;
-#[cfg(link_openssl)]
+// NOTE: Always link openssl #[cfg(link_openssl)]
 extern crate openssl_sys;
-#[cfg(feature = "rustls")]
-extern crate rustls_ffi;
+/* NOTE: Disable for only-openssl setup.
+ * #[cfg(feature = "rustls")]
+ * extern crate rustls_ffi;
+ */
 
 use libc::c_ulong;
 use libc::{c_char, c_double, c_int, c_long, c_short, c_uint, c_void, size_t, time_t};
@@ -21,10 +26,6 @@ pub use windows_sys::Win32::Networking::WinSock::FD_SET as fd_set;
 #[cfg(windows)]
 use windows_sys::Win32::Networking::WinSock::SOCKADDR;
 
-#[cfg(target_env = "msvc")]
-#[doc(hidden)]
-pub type __enum_ty = libc::c_int;
-#[cfg(not(target_env = "msvc"))]
 #[doc(hidden)]
 pub type __enum_ty = libc::c_uint;
 
@@ -1167,10 +1168,12 @@ extern "C" {
     ) -> CURLMcode;
 }
 
+// NOTE: Should we keep these?
 pub fn rust_crate_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
+// NOTE: Should we keep these?
 #[doc(hidden)]
 pub fn vendored() -> bool {
     cfg!(libcurl_vendored)
